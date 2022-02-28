@@ -1,5 +1,6 @@
 package com.example.bmi_calcurate
 
+import android.graphics.fonts.FontStyle
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,7 +33,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import java.time.LocalDateTime
 import kotlin.math.pow
+import kotlin.math.round
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +68,41 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+fun TopBar(
+    navController: NavController,
+    modifier : Modifier = Modifier
+){
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp)
+    ){
+        Icon(
+            imageVector = Icons.Default.ArrowBack,
+            contentDescription = "home",
+            modifier = Modifier.clickable {
+                navController.navigate("home")
+            }
+        )
+        //클릭 리스너 처리
+        Icon(
+            painter = painterResource(id = R.drawable.ic_baseline_link_24) ,
+            contentDescription = "link",
+            tint = Color.Black,
+            modifier = Modifier.size(24.dp)
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.ic_baseline_add_24),
+            contentDescription = "add",
+            tint = Color.Black,
+            modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
+@Composable
 fun HomeScreen(
     onResultClicked : (Double , Double) -> Unit
 ){
@@ -76,11 +115,7 @@ fun HomeScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("비만도 계산기") }
-            )
-        }
+
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -117,36 +152,37 @@ fun HomeScreen(
 
 @Composable
 fun ResultScreen(navController: NavController , bmi : Double){
+//    저체중	20 미만
+//    정상	20 - 24
+//    과체중	25 - 29
+//    비만	30 이상
 
-    val text = when{
+    val bmi_cal = when{
         bmi >= 35 -> "고도 비만"
-        bmi >= 30 -> "2단계 비만"
-        bmi >= 25 -> "1단계 비만"
-        bmi >= 23 -> "과체중"
-        bmi >= 18.5 -> "정상"
+        bmi >= 30 -> "비만"
+        bmi >= 25 -> "과체중"
+        bmi >= 20 -> "정상"
         else -> "저체중"
     }
 
+    // when객체로 받아오기
+    val bmi_state_color = listOf<Color>(Color.Green , Color.Blue , Color(0xFFFF9800) ,
+                                        Color.Red , Color.Black)
+
+    val Icon_Tint_Color = listOf(Color.Black , Color.White)
+    var date : LocalDateTime = LocalDateTime.now()
+
     val imageRes = when{
-        bmi >= 23 -> R.drawable.ic_baseline_sentiment_dissatisfied_24
-        bmi >= 18.5 -> R.drawable.ic_baseline_sentiment_satisfied_24
-        else -> R.drawable.ic_baseline_sentiment_dissatisfied_24
+        bmi >= 35 -> R.drawable.ic_superhigh_weight
+        bmi >= 30 -> R.drawable.ic_high_overweight
+        bmi >= 25 -> R.drawable.ic_overweight
+        bmi >= 20 -> R.drawable.ic_normal
+        else -> R.drawable.ic_row_weight
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("비만도 계산기") },
-                navigationIcon = {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "home",
-                        modifier = Modifier.clickable {
-                            navController.navigate("home")
-                        }
-                    )
-                }
-            )
+            TopBar(navController)
         }
     ) {
         Column(
@@ -154,8 +190,12 @@ fun ResultScreen(navController: NavController , bmi : Double){
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(text, fontSize = 30.sp)
-            Spacer(modifier = Modifier.height(50.dp)) // 이모지와 텍스트 사이 간격
+            Text(text = "현재 BMI" , fontSize = 15.sp)
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text = "${round(bmi*10)/100}" , fontSize = 30.sp , fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text = "${date}" , fontSize = 15.sp)
+            
             Image(
                 painter = painterResource(id = imageRes),
                 contentDescription = null,
@@ -164,6 +204,7 @@ fun ResultScreen(navController: NavController , bmi : Double){
                     color = Color.Black
                 )
             )
+            Text(bmi_cal, fontSize = 30.sp)
         }
     }
 }
