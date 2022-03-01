@@ -4,26 +4,26 @@ import android.graphics.fonts.FontStyle
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +34,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.pow
 import kotlin.math.round
 
@@ -73,31 +74,34 @@ fun TopBar(
     modifier : Modifier = Modifier
 ){
     Row(
+        //수직
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround,
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp)
+            .padding(vertical = 5.dp)
     ){
+        Spacer(modifier = Modifier.height(40.dp))
         Icon(
             imageVector = Icons.Default.ArrowBack,
-            contentDescription = "home",
-            modifier = Modifier.clickable {
-                navController.navigate("home")
-            }
+            contentDescription = "Back",
+            tint = Color.White,
+            modifier = Modifier
+                .size(30.dp)
+                .clickable { navController.navigate("home") }
         )
-        //클릭 리스너 처리
+        Spacer(modifier = Modifier.width(250.dp))
         Icon(
-            painter = painterResource(id = R.drawable.ic_baseline_link_24) ,
-            contentDescription = "link",
-            tint = Color.Black,
-            modifier = Modifier.size(24.dp)
+            painter = painterResource(id = R.drawable.ic_baseline_link_24),
+            contentDescription = "Bell",
+            tint = Color.White,
+            modifier = Modifier.size(30.dp)
         )
         Icon(
             painter = painterResource(id = R.drawable.ic_baseline_add_24),
-            contentDescription = "add",
-            tint = Color.Black,
-            modifier = Modifier.size(24.dp)
+            contentDescription = "Menu",
+            tint = Color.White,
+            modifier = Modifier.size(30.dp)
         )
     }
 }
@@ -114,8 +118,16 @@ fun HomeScreen(
         mutableStateOf("")
     }
 
-    Scaffold(
 
+    Scaffold(
+        topBar = {
+            TopAppBar (
+                title = { Text(text = "체질량 측정기 (BMI)",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 23.sp,
+                    color = Color.White)}
+            )
+        }
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -148,14 +160,11 @@ fun HomeScreen(
             }
         }
     }
+
 }
 
 @Composable
 fun ResultScreen(navController: NavController , bmi : Double){
-//    저체중	20 미만
-//    정상	20 - 24
-//    과체중	25 - 29
-//    비만	30 이상
 
     val bmi_cal = when{
         bmi >= 35 -> "고도 비만"
@@ -165,12 +174,17 @@ fun ResultScreen(navController: NavController , bmi : Double){
         else -> "저체중"
     }
 
-    // when객체로 받아오기
-    val bmi_state_color = listOf<Color>(Color.Green , Color.Blue , Color(0xFFFF9800) ,
-                                        Color.Red , Color.Black)
+    val bmi_state_color = when{
+        bmi >= 35 -> listOf(Color.Black , Color(0xFF464545))
+        bmi >= 30 -> listOf(Color.Red , Color(0xFFF76262))
+        bmi >= 25 -> listOf(Color(0xFFFF5722), Color(0xFFF76638))
+        bmi >= 20 -> listOf(Color.Blue , Color(0xFF7E8EEB))
+        else -> listOf(Color.Green , Color(0xFF98C069))
+    }
 
-    val Icon_Tint_Color = listOf(Color.Black , Color.White)
-    var date : LocalDateTime = LocalDateTime.now()
+    var currrent : LocalDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH시mm분 a")
+    val formatted = currrent.format(formatter)
 
     val imageRes = when{
         bmi >= 35 -> R.drawable.ic_superhigh_weight
@@ -180,35 +194,78 @@ fun ResultScreen(navController: NavController , bmi : Double){
         else -> R.drawable.ic_row_weight
     }
 
-    Scaffold(
-        topBar = {
-            TopBar(navController)
-        }
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
+
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .background(
+                Brush.verticalGradient(
+                    colors = bmi_state_color as List<Color>
+                ),
+                alpha = 0.5f
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+
         ) {
-            Text(text = "현재 BMI" , fontSize = 15.sp)
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(text = "${round(bmi*10)/100}" , fontSize = 30.sp , fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(text = "${date}" , fontSize = 15.sp)
-            
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = null,
-                modifier = Modifier.size(100.dp),
-                colorFilter = ColorFilter.tint(
-                    color = Color.Black
-                )
+        TopBar(navController)
+        Spacer(modifier = Modifier.height(25.dp))
+        Text(text = "현재 BMI" , fontSize = 25.sp , color = Color.White)
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(text = "${round(bmi*100)/100}"
+            , fontSize = 50.sp
+            , fontWeight = FontWeight.Bold
+            , color = Color.White)
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(text = "${formatted}" , fontSize = 25.sp , color = Color.White)
+        Spacer(modifier = Modifier.height(20.dp))
+        Image(
+            painter = painterResource(id = imageRes),
+            contentDescription = null,
+            modifier = Modifier.size(200.dp),
+            colorFilter = ColorFilter.tint(
+                color = Color.White
             )
-            Text(bmi_cal, fontSize = 30.sp)
-        }
+        )
+        Text(bmi_cal, fontSize = 50.sp , fontWeight = FontWeight.Bold , color = Color.White)
+
+        // 상세정보
+        Detail_content(bmi )
+
     }
+
 }
 
+@Composable
+fun Detail_content(
+    bmi : Double,
+    modifier : Modifier = Modifier
+){
+
+
+        Text(text = "상세정보" , fontSize = 20.sp , fontWeight = FontWeight.Bold , color = Color.White)
+        Card(elevation = 5.dp) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = modifier
+                    .padding(24.dp)
+                    .fillMaxSize()
+                    .alpha(0.5f)
+            ) {
+
+            }
+        }
+
+
+
+}
+
+@Preview
+@Composable
+fun Pre_Detail(){
+    Detail_content(bmi = 10.0 )
+}
 
 class BmiViewModel : ViewModel() {
     private val _bmi = mutableStateOf(0.0)
