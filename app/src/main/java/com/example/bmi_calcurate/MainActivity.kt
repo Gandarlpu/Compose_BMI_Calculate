@@ -16,10 +16,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -243,20 +242,63 @@ fun Detail_content(
     modifier : Modifier = Modifier
 ){
 
-
-        Text(text = "상세정보" , fontSize = 20.sp , fontWeight = FontWeight.Bold , color = Color.White)
-        Card(elevation = 5.dp) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = modifier
-                    .padding(24.dp)
-                    .fillMaxSize()
-                    .alpha(0.5f)
+        Spacer(modifier = modifier.height(50.dp))
+        Column(
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = "상세정보" , fontSize = 20.sp , fontWeight = FontWeight.Bold , color = Color.White)
+            Card(
+                elevation = 15.dp,
+                shape = RoundedCornerShape(20.dp),
+                backgroundColor = Color.White
             ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = modifier
+                        .padding(24.dp)
+                        .alpha(0f)
+                ) {
+                    Text(text = "${round(bmi*100)/100}"
+                        , fontSize = 50.sp
+                        , fontWeight = FontWeight.Bold
+                        , color = Color.White)
 
+
+                }
             }
         }
+}
 
+@Composable
+fun color_bar(){
+
+    var bmi_color_bar = listOf(Color.Green , Color.Blue , Color(0xFFFF5722) ,
+                                Color.Red , Color.Black)
+    var bmi_text = listOf("저체중" , "정상" , "과체중" , "비만" , "고도비만")
+
+    Row(
+        modifier = Modifier
+            .padding(10.dp)
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(modifier = Modifier
+            .clip(shape = RectangleShape)
+            .background(Color.Blue)
+            .size(24.dp),
+        )
+        Spacer(modifier = Modifier.width(20.dp))
+        Text(text = "테스트" , fontSize = 20.sp , color = Color.White)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.End
+        ){
+            Text(text = "18.5", fontSize = 20.sp , color = Color.White)
+        }
+
+    }
 
 
 }
@@ -264,7 +306,7 @@ fun Detail_content(
 @Preview
 @Composable
 fun Pre_Detail(){
-    Detail_content(bmi = 10.0 )
+    color_bar()
 }
 
 class BmiViewModel : ViewModel() {
