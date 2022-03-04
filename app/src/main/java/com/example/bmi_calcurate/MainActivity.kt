@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.SnackbarDefaults.backgroundColor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.res.painterResource
@@ -37,7 +39,13 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.pow
 import kotlin.math.round
 
+var bmi_color_bar = listOf(Color.Green , Color.Blue , Color(0xFFFF5722) ,
+    Color.Red , Color.Black)
+var bmi_text = listOf("저체중" , "정상" , "과체중" , "비만" , "고도비만")
+var bmi_text_num = listOf("< 19" , ">= 20" , ">= 25 " , ">= 30" , ">= 35")
+
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -230,7 +238,7 @@ fun ResultScreen(navController: NavController , bmi : Double){
         Text(bmi_cal, fontSize = 50.sp , fontWeight = FontWeight.Bold , color = Color.White)
 
         // 상세정보
-        Detail_content(bmi )
+        Detail_content(bmi , bmi_state_color)
 
     }
 
@@ -239,30 +247,33 @@ fun ResultScreen(navController: NavController , bmi : Double){
 @Composable
 fun Detail_content(
     bmi : Double,
+    bmi_state_color : List<Color>,
     modifier : Modifier = Modifier
 ){
 
         Spacer(modifier = modifier.height(50.dp))
         Column(
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = modifier.padding(24.dp)
         ) {
-            Text(text = "상세정보" , fontSize = 20.sp , fontWeight = FontWeight.Bold , color = Color.White)
+            Text(text = "상세정보" , fontSize = 23.sp
+                , fontWeight = FontWeight.Bold
+                , color = Color.White)
+            Spacer(modifier = modifier.height(13.dp))
             Card(
                 elevation = 15.dp,
-                shape = RoundedCornerShape(20.dp),
-                backgroundColor = Color.White
+                shape = RoundedCornerShape(30.dp),
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = modifier
-                        .padding(24.dp)
-                        .alpha(0f)
+                        .background(bmi_state_color[0].copy(alpha = 0.5f)),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(text = "${round(bmi*100)/100}"
                         , fontSize = 50.sp
                         , fontWeight = FontWeight.Bold
                         , color = Color.White)
-
+                    color_bar()
 
                 }
             }
@@ -272,41 +283,44 @@ fun Detail_content(
 @Composable
 fun color_bar(){
 
-    var bmi_color_bar = listOf(Color.Green , Color.Blue , Color(0xFFFF5722) ,
-                                Color.Red , Color.Black)
-    var bmi_text = listOf("저체중" , "정상" , "과체중" , "비만" , "고도비만")
-
-    Row(
+    Column(
         modifier = Modifier
-            .padding(10.dp)
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+            .fillMaxWidth()
+            .padding(10.dp),
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Box(modifier = Modifier
-            .clip(shape = RectangleShape)
-            .background(Color.Blue)
-            .size(24.dp),
-        )
-        Spacer(modifier = Modifier.width(20.dp))
-        Text(text = "테스트" , fontSize = 20.sp , color = Color.White)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.End
-        ){
-            Text(text = "18.5", fontSize = 20.sp , color = Color.White)
+        repeat(5){
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier
+                    .clip(shape = RectangleShape)
+                    .background(bmi_color_bar[it])
+                    .size(24.dp),
+                )
+                Spacer(modifier = Modifier.width(20.dp))
+                Text(text = "${bmi_text[it]}" , fontSize = 20.sp , color = Color.White , fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.End
+                ){
+                    Text(text = "${bmi_text_num[it]}", fontSize = 20.sp , color = Color.White , fontWeight = FontWeight.Bold)
+                }
+            }
         }
 
     }
-
 
 }
 
 @Preview
 @Composable
 fun Pre_Detail(){
-    color_bar()
+    Detail_content(25.0 , listOf(Color.Red , Color.Red))
 }
 
 class BmiViewModel : ViewModel() {
