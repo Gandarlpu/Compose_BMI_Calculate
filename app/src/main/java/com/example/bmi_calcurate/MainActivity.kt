@@ -70,6 +70,12 @@ class MainActivity : ComponentActivity() {
                         bmi = bmi
                     )
                 }
+                composable(route = "record"){
+                    recordScreen(
+                        navController,
+                        bmi = bmi
+                    )
+                }
             }
         }
     }
@@ -108,7 +114,11 @@ fun TopBar(
             painter = painterResource(id = R.drawable.ic_baseline_add_24),
             contentDescription = "Menu",
             tint = Color.White,
-            modifier = Modifier.size(30.dp)
+            modifier = Modifier
+                .size(30.dp)
+                .clickable {
+                    navController.navigate("record")
+                }
         )
     }
 }
@@ -173,35 +183,11 @@ fun HomeScreen(
 @Composable
 fun ResultScreen(navController: NavController , bmi : Double){
 
-    val bmi_cal = when{
-        bmi >= 35 -> "고도 비만"
-        bmi >= 30 -> "비만"
-        bmi >= 25 -> "과체중"
-        bmi >= 20 -> "정상"
-        else -> "저체중"
-    }
-
-    val bmi_state_color = when{
-        bmi >= 35 -> listOf(Color.Black , Color(0xFF464545))
-        bmi >= 30 -> listOf(Color.Red , Color(0xFFF76262))
-        bmi >= 25 -> listOf(Color(0xFFFF5722), Color(0xFFF76638))
-        bmi >= 20 -> listOf(Color.Blue , Color(0xFF7E8EEB))
-        else -> listOf(Color.Green , Color(0xFF98C069))
-    }
-
     var currrent : LocalDateTime = LocalDateTime.now()
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH시mm분 a")
     val formatted = currrent.format(formatter)
 
-    val imageRes = when{
-        bmi >= 35 -> R.drawable.ic_superhigh_weight
-        bmi >= 30 -> R.drawable.ic_high_overweight
-        bmi >= 25 -> R.drawable.ic_overweight
-        bmi >= 20 -> R.drawable.ic_normal
-        else -> R.drawable.ic_row_weight
-    }
-
-
+    var bmi_state_res = bmi_state_res(bmi)
 
     Column(
         modifier = Modifier
@@ -209,7 +195,8 @@ fun ResultScreen(navController: NavController , bmi : Double){
             .verticalScroll(rememberScrollState())
             .background(
                 Brush.verticalGradient(
-                    colors = bmi_state_color as List<Color>
+                    //colors = bmi_state_color as List<Color>
+                bmi_state_res.bmi_state_color()
                 ),
                 alpha = 0.5f
             ),
@@ -219,7 +206,7 @@ fun ResultScreen(navController: NavController , bmi : Double){
         TopBar(navController)
         Spacer(modifier = Modifier.height(25.dp))
         Text(text = "현재 BMI" , fontSize = 25.sp , color = Color.White)
-        Spacer(modifier = Modifier.height(5.dp))
+        Spacer(modifier = Modifier.height(2.dp))
         Text(text = "${round(bmi*100)/100}"
             , fontSize = 50.sp
             , fontWeight = FontWeight.Bold
@@ -228,17 +215,17 @@ fun ResultScreen(navController: NavController , bmi : Double){
         Text(text = "${formatted}" , fontSize = 25.sp , color = Color.White)
         Spacer(modifier = Modifier.height(20.dp))
         Image(
-            painter = painterResource(id = imageRes),
+            painter = painterResource(id = bmi_state_res.imageRes()),
             contentDescription = null,
             modifier = Modifier.size(200.dp),
             colorFilter = ColorFilter.tint(
                 color = Color.White
             )
         )
-        Text(bmi_cal, fontSize = 50.sp , fontWeight = FontWeight.Bold , color = Color.White)
+        Text(bmi_state_res.bmi_cal(), fontSize = 50.sp , fontWeight = FontWeight.Bold , color = Color.White)
 
         // 상세정보
-        Detail_content(bmi , bmi_state_color)
+        Detail_content(bmi , bmi_state_res.bmi_state_color())
 
     }
 
