@@ -53,6 +53,10 @@ class MainActivity : ComponentActivity() {
             val viewModel = viewModel<BmiViewModel>()
             val navController = rememberNavController()
             val bmi = viewModel.bmi.value
+            // 해당 시간 받기
+            var currrent : LocalDateTime = LocalDateTime.now()
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH시mm분 a")
+            val formatted = currrent.format(formatter)
 
             NavHost(
                 navController = navController,
@@ -67,13 +71,15 @@ class MainActivity : ComponentActivity() {
                 composable(route = "Result"){
                     ResultScreen(
                         navController,
-                        bmi = bmi
+                        bmi = bmi,
+                        formatted
                     )
                 }
                 composable(route = "record"){
                     recordScreen(
                         navController,
-                        bmi = bmi
+                        bmi = bmi,
+                        formatted
                     )
                 }
             }
@@ -175,100 +181,40 @@ fun HomeScreen(
             ){
                 Text("결과")
             }
+            Bmi_info(Modifier)
         }
     }
 
 }
 
+
 @Composable
-fun ResultScreen(navController: NavController , bmi : Double){
+fun Bmi_info(modifier : Modifier){
 
-    var currrent : LocalDateTime = LocalDateTime.now()
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH시mm분 a")
-    val formatted = currrent.format(formatter)
-
-    var bmi_state_res = bmi_state_res(bmi)
-
+    Spacer(modifier = modifier.height(50.dp))
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .background(
-                Brush.verticalGradient(
-                    //colors = bmi_state_color as List<Color>
-                bmi_state_res.bmi_state_color()
-                ),
-                alpha = 0.5f
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-
-        ) {
-        TopBar(navController)
-        Spacer(modifier = Modifier.height(25.dp))
-        Text(text = "현재 BMI" , fontSize = 25.sp , color = Color.White)
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(text = "${round(bmi*100)/100}"
-            , fontSize = 50.sp
+        verticalArrangement = Arrangement.Center,
+        modifier = modifier.padding(24.dp)
+    ) {
+        Text(text = "BMI수치" , fontSize = 23.sp
             , fontWeight = FontWeight.Bold
-            , color = Color.White)
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "${formatted}" , fontSize = 25.sp , color = Color.White)
-        Spacer(modifier = Modifier.height(20.dp))
-        Image(
-            painter = painterResource(id = bmi_state_res.imageRes()),
-            contentDescription = null,
-            modifier = Modifier.size(200.dp),
-            colorFilter = ColorFilter.tint(
-                color = Color.White
-            )
-        )
-        Text(bmi_state_res.bmi_cal(), fontSize = 50.sp , fontWeight = FontWeight.Bold , color = Color.White)
-
-        // 상세정보
-        Detail_content(bmi , bmi_state_res.bmi_state_color())
-
-    }
-
-}
-
-@Composable
-fun Detail_content(
-    bmi : Double,
-    bmi_state_color : List<Color>,
-    modifier : Modifier = Modifier
-){
-
-        Spacer(modifier = modifier.height(50.dp))
-        Column(
-            verticalArrangement = Arrangement.SpaceBetween,
-            modifier = modifier.padding(24.dp)
+            , color = Color.Black)
+        Spacer(modifier = modifier.height(13.dp))
+        Card(
+            elevation = 15.dp,
+            shape = RoundedCornerShape(30.dp),
         ) {
-            Text(text = "상세정보" , fontSize = 23.sp
-                , fontWeight = FontWeight.Bold
-                , color = Color.White)
-            Spacer(modifier = modifier.height(13.dp))
-            Card(
-                elevation = 15.dp,
-                shape = RoundedCornerShape(30.dp),
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Column(
-                    modifier = modifier
-                        .background(bmi_state_color[0].copy(alpha = 0.5f)),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(text = "${round(bmi*100)/100}"
-                        , fontSize = 50.sp
-                        , fontWeight = FontWeight.Bold
-                        , color = Color.White)
-                    color_bar()
-
-                }
+                bmi_info_color_bar()
             }
         }
+    }
 }
 
 @Composable
-fun color_bar(){
+fun bmi_info_color_bar(){
 
     Column(
         modifier = Modifier
@@ -288,27 +234,22 @@ fun color_bar(){
                     .size(24.dp),
                 )
                 Spacer(modifier = Modifier.width(20.dp))
-                Text(text = "${bmi_text[it]}" , fontSize = 20.sp , color = Color.White , fontWeight = FontWeight.Bold)
+                Text(text = "${bmi_text[it]}" , fontSize = 20.sp , color = Color.Black , fontWeight = FontWeight.Bold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(12.dp),
                     horizontalArrangement = Arrangement.End
                 ){
-                    Text(text = "${bmi_text_num[it]}", fontSize = 20.sp , color = Color.White , fontWeight = FontWeight.Bold)
+                    Text(text = "${bmi_text_num[it]}", fontSize = 20.sp , color = Color.Black , fontWeight = FontWeight.Bold)
                 }
             }
         }
 
     }
-
 }
 
-@Preview
-@Composable
-fun Pre_Detail(){
-    Detail_content(25.0 , listOf(Color.Red , Color.Red))
-}
+
 
 class BmiViewModel : ViewModel() {
     private val _bmi = mutableStateOf(0.0)

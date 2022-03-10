@@ -10,16 +10,17 @@ class DBHelper(context : Context) : SQLiteOpenHelper(context , "bmidb" , null , 
         val bmiSql = """
            create table bmidb_member(
             _id integer primary key autoincrement,
-            bmi not null   
+            bmi not null,
+            time not null   
            )
         """
 
         // sql 실행
         db?.execSQL(bmiSql)
         // test data insert
-        db?.execSQL("insert into bmidb_member (bmi)" +
-                        "values ('-1')"
-        )
+//        db?.execSQL("insert into bmidb_member (bmi , time)" +
+//                        "values ('-1')"
+//        )
 
     }
 

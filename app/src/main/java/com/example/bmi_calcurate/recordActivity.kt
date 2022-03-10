@@ -2,6 +2,7 @@ package com.example.bmi_calcurate
 
 import android.content.ContentValues
 import android.preference.PreferenceActivity
+import android.widget.Toast
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
+import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.layout
@@ -29,10 +31,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import java.time.LocalDate
 import kotlin.math.round
 
 @Composable
-fun recordScreen(navController: NavController , bmi : Double){
+fun recordScreen(navController: NavController , bmi : Double , formatted : String){
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -44,23 +47,24 @@ fun recordScreen(navController: NavController , bmi : Double){
     ) {
         record_Topbar(navController)
         record_list()
-        //list_custom_item(bmi)
-        record_btn(bmi)
+        record_btn(bmi , formatted)
 
     }
 
 }
 
 @Composable
-fun list_custom_item(bmi : Double){
+fun list_custom_item(bmi : record_list_item_data){
 
-    val bmi_state_res = bmi_state_res(bmi)
+    val bmi_data = bmi.bmi
+    val bmi_state_res = bmi_state_res(bmi_data)
+
 
 
     Card(
         elevation = 5.dp,
         shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.padding(24.dp)
+        modifier = Modifier.padding(5.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -69,8 +73,11 @@ fun list_custom_item(bmi : Double){
                 .padding(10.dp)
                 .fillMaxWidth()
         ) {
-            Text(text = "BMI : ${round(bmi*100)/100}" , fontSize = 24.sp , fontWeight = FontWeight.Bold , color = Black)
-
+            Column(modifier = Modifier.padding(5.dp)
+            ) {
+                Text(text = "BMI : ${round(bmi_data*100)/100}" , fontSize = 24.sp , fontWeight = FontWeight.Bold , color = Black)
+                Text(text = "${bmi.time}" , fontSize = 15.sp , color = Gray)
+            }
             Card(
                 elevation = 5.dp,
                 shape = RoundedCornerShape(10.dp)
@@ -114,16 +121,20 @@ fun record_list(){
     //db에서 bmi받아오기
     val context = LocalContext.current
     val db = DBHelper(context).readableDatabase
-    var bmi_list = mutableListOf<Double>()
+    var bmi_list = mutableListOf<record_list_item_data>()
+    //var bmi_list = mutableListOf<Double>()
 
     // query의 매개변수
     // (테이블 명, 배열형식의 컬럼명, where뒤에 들어갈 문자열, where조건에 들어갈 데이터,
     // GroupBy절, Having절, orderBy절)
-    val cursor = db.query("bmidb_member" , arrayOf("bmi"),
+    val cursor = db.query("bmidb_member" , arrayOf("bmi" , "time"),
         null , null , null , null , null)
 
     while(cursor.moveToNext()){
-        bmi_list.add(cursor.getDouble(0))
+        val record_data = record_list_item_data(cursor.getDouble(0)
+                                                , cursor.getString(1))
+        bmi_list.add(record_data)
+        //bmi_list.add(cursor.getDouble(0))
     }
     db.close()
     ////////////////////////////////////////////////////////////////////////////////
@@ -151,7 +162,6 @@ fun record_list(){
     //Column은 잘나옴
     Column(
         modifier = Modifier
-            .padding(10.dp)
             .fillMaxSize()
             //.verticalScroll(scrollState)
     ) {
@@ -165,30 +175,33 @@ fun record_list(){
 
 
 @Composable
-fun record_btn(bmi : Double){
+fun record_btn(bmi : Double , time : String){
     val context = LocalContext.current
     val helper = DBHelper(context)
     val db = helper.writableDatabase
+    var isClicked = true
+    // 두번 클릭했을 때 튕김이슈
+    // 일단 버튼 클릭횟수 제한으로 막아두고 나중에 다른방법 사용
 
     Button(onClick = {
-        // DB저장
-        val values = ContentValues()
-        values.put("bmi" , bmi)
-        // insert
-        db.insert("bmidb_member" , null , values)
-        db.close()
+        if(isClicked){
+            // DB저장
+            val values = ContentValues()
+            values.put("bmi" , bmi)
+            values.put("time" , time)
+            // insert
+            db.insert("bmidb_member" , null , values)
+            db.close()
+            isClicked = false
+        }else{
+            Toast.makeText(context , "앱 종료 후 다시 클릭해주세요" , Toast.LENGTH_SHORT).show()
+        }
+
     },
     ) {
         Text("기록하기" , color = White , fontSize = 24.sp , fontWeight = FontWeight.Bold)
     }
 
-    Button(onClick = {
-        // DB삭제
-        db.delete("bmidb_member" , null , null)
-    },
-    ) {
-        Text("삭제" , color = White , fontSize = 24.sp , fontWeight = FontWeight.Bold)
-    }
 }
 
 
