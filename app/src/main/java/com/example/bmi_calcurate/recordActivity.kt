@@ -1,5 +1,6 @@
 package com.example.bmi_calcurate
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.preference.PreferenceActivity
 import android.widget.Toast
@@ -13,6 +14,10 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -122,7 +127,8 @@ fun record_list(){
     val context = LocalContext.current
     val db = DBHelper(context).readableDatabase
     var bmi_list = mutableListOf<record_list_item_data>()
-    //var bmi_list = mutableListOf<Double>()
+    var column_update by rememberSaveable{ mutableStateOf(bmi_list) }
+
 
     // query의 매개변수
     // (테이블 명, 배열형식의 컬럼명, where뒤에 들어갈 문자열, where조건에 들어갈 데이터,
@@ -134,14 +140,13 @@ fun record_list(){
         val record_data = record_list_item_data(cursor.getDouble(0)
                                                 , cursor.getString(1))
         bmi_list.add(record_data)
-        //bmi_list.add(cursor.getDouble(0))
     }
     db.close()
     ////////////////////////////////////////////////////////////////////////////////
     println("bmi_list : ${bmi_list}")
-    //val scrollState = rememberLazyListState()
     val scrollState = rememberScrollState()
 
+//    val scrollState = rememberLazyListState()
 //    LazyColumn(
 //        state = scrollState,
 //        // 리스트 전체 패딩
@@ -163,7 +168,7 @@ fun record_list(){
     Column(
         modifier = Modifier
             .fillMaxSize()
-            //.verticalScroll(scrollState)
+            .verticalScroll(scrollState)
     ) {
         for(i in 0..bmi_list.size-1){
             list_custom_item(bmi_list[i])
@@ -192,6 +197,7 @@ fun record_btn(bmi : Double , time : String){
             // insert
             db.insert("bmidb_member" , null , values)
             db.close()
+
             isClicked = false
         }else{
             Toast.makeText(context , "앱 종료 후 다시 클릭해주세요" , Toast.LENGTH_SHORT).show()
