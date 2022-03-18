@@ -52,7 +52,7 @@ fun recordScreen(navController: NavController , bmi : Double , formatted : Strin
     ) {
         record_Topbar(navController)
         record_list()
-        record_btn(bmi , formatted)
+        record_btn(bmi , formatted , navController)
 
     }
 
@@ -63,7 +63,6 @@ fun list_custom_item(bmi : record_list_item_data){
 
     val bmi_data = bmi.bmi
     val bmi_state_res = bmi_state_res(bmi_data)
-
 
 
     Card(
@@ -136,12 +135,24 @@ fun record_list(){
     val cursor = db.query("bmidb_member" , arrayOf("bmi" , "time"),
         null , null , null , null , null)
 
-    while(cursor.moveToNext()){
-        val record_data = record_list_item_data(cursor.getDouble(0)
-                                                , cursor.getString(1))
-        bmi_list.add(record_data)
+    if(cursor != null){
+        while(cursor.moveToNext()){
+            val record_data = record_list_item_data(cursor.getDouble(0)
+                , cursor.getString(1))
+            bmi_list.add(record_data)
+        }
+        db.close()
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            for(i in 0..bmi_list.size-1){
+                list_custom_item(bmi_list[i])
+            }
+        }
     }
-    db.close()
+
     ////////////////////////////////////////////////////////////////////////////////
     println("bmi_list : ${bmi_list}")
     val scrollState = rememberScrollState()
@@ -165,22 +176,14 @@ fun record_list(){
 //    }
 
     //Column은 잘나옴
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-    ) {
-        for(i in 0..bmi_list.size-1){
-            list_custom_item(bmi_list[i])
-        }
-    }
+
 
 
 }
 
 
 @Composable
-fun record_btn(bmi : Double , time : String){
+fun record_btn(bmi : Double , time : String ,  navController: NavController){
     val context = LocalContext.current
     val helper = DBHelper(context)
     val db = helper.writableDatabase
@@ -199,6 +202,9 @@ fun record_btn(bmi : Double , time : String){
             db.close()
 
             isClicked = false
+
+            Toast.makeText(context , "저장 완료" , Toast.LENGTH_SHORT).show()
+            navController.navigate("result")
         }else{
             Toast.makeText(context , "앱 종료 후 다시 클릭해주세요" , Toast.LENGTH_SHORT).show()
         }

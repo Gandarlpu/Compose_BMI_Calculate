@@ -87,47 +87,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun TopBar(
-    navController: NavController,
-    modifier : Modifier = Modifier
-){
-    Row(
-        //수직
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceAround,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 5.dp)
-    ){
-        Spacer(modifier = Modifier.height(40.dp))
-        Icon(
-            imageVector = Icons.Default.ArrowBack,
-            contentDescription = "Back",
-            tint = Color.White,
-            modifier = Modifier
-                .size(30.dp)
-                .clickable { navController.navigate("home") }
-        )
-        Spacer(modifier = Modifier.width(250.dp))
-        Icon(
-            painter = painterResource(id = R.drawable.ic_baseline_link_24),
-            contentDescription = "Bell",
-            tint = Color.White,
-            modifier = Modifier.size(30.dp)
-        )
-        Icon(
-            painter = painterResource(id = R.drawable.ic_baseline_add_24),
-            contentDescription = "Menu",
-            tint = Color.White,
-            modifier = Modifier
-                .size(30.dp)
-                .clickable {
-                    navController.navigate("record")
-                }
-        )
-    }
-}
+
 
 @Composable
 fun HomeScreen(
@@ -148,7 +108,8 @@ fun HomeScreen(
                 title = { Text(text = "체질량 측정기 (BMI)",
                     fontWeight = FontWeight.Bold,
                     fontSize = 23.sp,
-                    color = Color.White)}
+                    color = Color.White)},
+                Modifier.background(Color.White)
             )
         }
     ) {
@@ -177,9 +138,11 @@ fun HomeScreen(
                     }
 
                 },
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .background(Color.Black)
             ){
-                Text("결과")
+                Text("결과" , color = Color.White)
             }
             Bmi_info(Modifier)
         }
@@ -194,9 +157,10 @@ fun Bmi_info(modifier : Modifier){
     Spacer(modifier = modifier.height(50.dp))
     Column(
         verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.padding(24.dp)
     ) {
-        Text(text = "BMI수치" , fontSize = 23.sp
+        Text(text = "평균 BMI수치" , fontSize = 23.sp
             , fontWeight = FontWeight.Bold
             , color = Color.Black)
         Spacer(modifier = modifier.height(13.dp))

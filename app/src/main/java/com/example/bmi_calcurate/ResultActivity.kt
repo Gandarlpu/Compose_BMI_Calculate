@@ -1,13 +1,13 @@
 package com.example.bmi_calcurate
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,6 +68,48 @@ fun ResultScreen(navController: NavController, bmi : Double, formatted : String)
 
     }
 
+}
+
+@Composable
+fun TopBar(
+    navController: NavController,
+    modifier : Modifier = Modifier
+){
+    Row(
+        //수직
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp)
+    ){
+        Spacer(modifier = Modifier.height(40.dp))
+        Icon(
+            imageVector = Icons.Default.ArrowBack,
+            contentDescription = "Back",
+            tint = Color.White,
+            modifier = Modifier
+                .size(30.dp)
+                .clickable { navController.navigate("home") }
+        )
+        Spacer(modifier = Modifier.width(250.dp))
+        Icon(
+            painter = painterResource(id = R.drawable.ic_baseline_link_24),
+            contentDescription = "Bell",
+            tint = Color.White,
+            modifier = Modifier.size(30.dp)
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.ic_baseline_add_24),
+            contentDescription = "Menu",
+            tint = Color.White,
+            modifier = Modifier
+                .size(30.dp)
+                .clickable {
+                    navController.navigate("record")
+                }
+        )
+    }
 }
 
 @Composable

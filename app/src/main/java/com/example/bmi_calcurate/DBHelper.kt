@@ -19,7 +19,7 @@ class DBHelper(context : Context) : SQLiteOpenHelper(context , "bmidb" , null , 
         db?.execSQL(bmiSql)
         // test data insert
 //        db?.execSQL("insert into bmidb_member (bmi , time)" +
-//                        "values ('-1')"
+//                        "values (-1 , -1)"
 //        )
 
     }
