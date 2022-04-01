@@ -2,6 +2,7 @@ package com.example.bmi_calcurate
 
 import android.graphics.fonts.FontStyle
 import android.os.Bundle
+import android.window.SplashScreen
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.*
@@ -60,8 +61,11 @@ class MainActivity : ComponentActivity() {
 
             NavHost(
                 navController = navController,
-                startDestination = "home"
+                startDestination = "splash"
             ){
+                composable(route = "splash"){
+                    SplashScreen(navController)
+                }
                 composable(route = "home"){
                     HomeScreen(){ height, weight ->
                         viewModel.bmiCalculate(height, weight)
@@ -105,17 +109,18 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar (
-                title = { Text(text = "체질량 측정기 (BMI)",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 23.sp,
-                    color = Color.White)},
-                Modifier.background(Color.White)
+                title = {},
+                Modifier
+                    .background(Color.Blue)
+                    .height(50.dp)
             )
-        }
+        },
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .padding(16.dp)
         ) {
+            Text(text = "체질량 측정기 (BMI) " ,)
             OutlinedTextField(
                 value = height,
                 onValueChange = setheight,
