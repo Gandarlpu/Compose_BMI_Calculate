@@ -8,11 +8,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,31 +41,61 @@ import androidx.navigation.compose.rememberNavController
 import java.time.LocalDate
 import kotlin.math.round
 
+var bmi_list = mutableListOf<record_list_item_data>()
+
 @Composable
 fun recordScreen(navController: NavController , bmi : Double , formatted : String){
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .verticalScroll(rememberScrollState())
-        .background(
-            color = com.example.bmi_calcurate.ui.theme.record_theme_color
-        ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        record_Topbar(navController)
-        record_list()
-        record_btn(bmi , formatted , navController)
+    val context = LocalContext.current
+    val db = DBHelper(context).readableDatabase
 
+    // query의 매개변수
+    // (테이블 명, 배열형식의 컬럼명, where뒤에 들어갈 문자열, where조건에 들어갈 데이터,
+    // GroupBy절, Having절, orderBy절)
+    val cursor = db.query("bmidb_member" , arrayOf("bmi" , "time"),
+        null , null , null , null , null)
+
+    if(cursor != null){
+        while(cursor.moveToNext()){
+            val record_data = record_list_item_data(cursor.getDouble(0)
+                , cursor.getString(1))
+            bmi_list.add(record_data)
+        }
+        db.close()
+
+        var test = mutableListOf<record_list_item_data>()
+        //bmi_list만 담을까
+        for(i in 0..bmi_list.size-1){
+            test.add(bmi_list[i])
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(com.example.bmi_calcurate.ui.theme.record_theme_color),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            record_Topbar(navController)
+            LazyColumn{
+                itemsIndexed(
+                    test
+                ){ index, item ->
+                    list_custom_item(item)
+                }
+            }
+            record_btn(bmi = bmi, time = formatted, navController = navController)
+        }
     }
+
+    println("bmi_list : ${bmi_list}")
 
 }
 
 @Composable
-fun list_custom_item(bmi : record_list_item_data){
+fun list_custom_item(bmi : record_list_item_data) {
 
     val bmi_data = bmi.bmi
     val bmi_state_res = bmi_state_res(bmi_data)
-
 
     Card(
         elevation = 5.dp,
@@ -112,22 +144,17 @@ fun list_custom_item(bmi : record_list_item_data){
 
         }
     }
-
-
     }
 }
 
 
 @Composable
-fun record_list(){
+fun record_list(navController: NavController , bmi : Double , formatted : String){
 
     ////////////////////////////////////////////////////////////////////////////////
     //db에서 bmi받아오기
     val context = LocalContext.current
     val db = DBHelper(context).readableDatabase
-    var bmi_list = mutableListOf<record_list_item_data>()
-    var column_update by rememberSaveable{ mutableStateOf(bmi_list) }
-
 
     // query의 매개변수
     // (테이블 명, 배열형식의 컬럼명, where뒤에 들어갈 문자열, where조건에 들어갈 데이터,
@@ -143,41 +170,28 @@ fun record_list(){
         }
         db.close()
 
+        var bmi_list = mutableListOf<record_list_item_data>()
+        for(i in 0..bmi_list.size-1){
+            bmi_list.add(bmi_list[i])
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(com.example.bmi_calcurate.ui.theme.record_theme_color)
         ) {
-            for(i in 0..bmi_list.size-1){
-                list_custom_item(bmi_list[i])
+            LazyColumn{
+                itemsIndexed(
+                    bmi_list
+                ){ index, item ->
+                    list_custom_item(item)
+                }
             }
+            record_btn(bmi = bmi, time = formatted, navController = navController)
         }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
     println("bmi_list : ${bmi_list}")
-    val scrollState = rememberScrollState()
-
-//    val scrollState = rememberLazyListState()
-//    LazyColumn(
-//        state = scrollState,
-//        // 리스트 전체 패딩
-//        contentPadding = PaddingValues(16.dp),
-//        // item 사이 간격
-//        verticalArrangement = Arrangement.spacedBy(5.dp)
-//    ){
-//        items(5){ idx ->
-//            Column(modifier = Modifier.fillMaxSize()) {
-//                Text("Item : ${idx}" , color = Black , fontSize = 30.sp)
-//            }
-//        }
-////        items(bmi_list) { idx ->
-////            list_custom_item(idx)
-////        }
-//    }
-
-    //Column은 잘나옴
-
-
 
 }
 
@@ -191,6 +205,7 @@ fun record_btn(bmi : Double , time : String ,  navController: NavController){
     // 두번 클릭했을 때 튕김이슈
     // 일단 버튼 클릭횟수 제한으로 막아두고 나중에 다른방법 사용
 
+    Spacer(modifier = Modifier.height(10.dp))
     Button(onClick = {
         if(isClicked){
             // DB저장
@@ -211,7 +226,7 @@ fun record_btn(bmi : Double , time : String ,  navController: NavController){
 
     },
     ) {
-        Text("기록하기" , color = White , fontSize = 24.sp , fontWeight = FontWeight.Bold)
+        Text("기록하기" , color = White , fontSize = 23.sp , fontWeight = FontWeight.Bold)
     }
 
 }
@@ -222,6 +237,10 @@ fun record_Topbar(
     navController: NavController,
     modifier : Modifier = Modifier
 ){
+
+    val context = LocalContext.current
+    val db = DBHelper(context).writableDatabase
+
     Row(
         //수직
         verticalAlignment = Alignment.CenterVertically,
@@ -241,12 +260,14 @@ fun record_Topbar(
         )
         Text(text = "등록된 BMI", fontSize = 20.sp , color = White)
         Spacer(modifier = Modifier.width(150.dp))
-        Button(onClick = { /*TODO*/ },
-                modifier = Modifier
-                    .layoutId("record_btn")
+        Button(modifier = Modifier
+                            .layoutId("record_btn"),
+            onClick = {
+
+            },
+
         ){
             Text(text = "수정" , color = White , fontSize = 18.sp)
         }
     }
 }
-

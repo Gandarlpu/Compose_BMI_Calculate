@@ -107,14 +107,6 @@ fun HomeScreen(
 
 
     Scaffold(
-        topBar = {
-            TopAppBar (
-                title = {},
-                Modifier
-                    .background(Color.Blue)
-                    .height(50.dp)
-            )
-        },
     ) {
         Column(
             modifier = Modifier
