@@ -2,6 +2,7 @@ package com.example.bmi_calcurate
 
 import android.graphics.fonts.FontStyle
 import android.os.Bundle
+import android.widget.Toast
 import android.window.SplashScreen
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -97,7 +99,7 @@ class MainActivity : ComponentActivity() {
 fun HomeScreen(
     onResultClicked : (Double , Double) -> Unit
 ){
-
+    val context = LocalContext.current
     val (height , setheight) = rememberSaveable{
         mutableStateOf("")
     }
@@ -132,6 +134,8 @@ fun HomeScreen(
                 onClick = {
                     if(height.isNotEmpty() && weight.isNotEmpty()){
                         onResultClicked(height.toDouble() , weight.toDouble())
+                    }else{
+                        Toast.makeText(context, "정보를 모두 입력해주세요." , Toast.LENGTH_SHORT).show()
                     }
 
                 },
@@ -144,7 +148,6 @@ fun HomeScreen(
             Bmi_info(Modifier)
         }
     }
-
 }
 
 
