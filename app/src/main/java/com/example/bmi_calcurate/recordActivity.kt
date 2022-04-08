@@ -15,11 +15,8 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -53,7 +50,7 @@ fun record_main_list(navController: NavController , bmi : Double , formatted : S
 
     val context = LocalContext.current
     val db = DBHelper(context).readableDatabase
-    var bmi_list = mutableListOf<record_list_item_data>()
+    var bmi_list = remember { mutableListOf<record_list_item_data>() }
 
     // query의 매개변수
     val cursor = db.query("bmidb_member" , arrayOf("bmi" , "time"),
@@ -73,7 +70,8 @@ fun record_main_list(navController: NavController , bmi : Double , formatted : S
     }
     println("bmi_list : ${bmi_list}")
 
-    // Column 뿌리기
+    // lazyColumn의 index로 list.removeAt(index) 삭제
+    // 그럴려면 애니메이션이든 수정클릭이든 휴지통 아이콘이 나와야 될 듯
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -174,6 +172,7 @@ fun list_custom_item(bmi : record_list_item_data) {
 
     val bmi_data = bmi.bmi
     val bmi_state_res = bmi_state_res(bmi_data)
+    var remove_state = false
 
     Card(
         elevation = 5.dp,
@@ -210,10 +209,15 @@ fun list_custom_item(bmi : record_list_item_data) {
                     Image(
                         painter = painterResource(id = bmi_state_res.imageRes()),
                         contentDescription = null,
-                        modifier = Modifier.size(50.dp),
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clickable {
+                                remove_state = true
+
+                            },
                         colorFilter = ColorFilter.tint(
                             color = Color.White
-                        )
+                        ),
                     )
                     Text(bmi_state_res.bmi_cal(), fontWeight = FontWeight.Bold
                         , color = Color.White , fontSize = 20.sp)
