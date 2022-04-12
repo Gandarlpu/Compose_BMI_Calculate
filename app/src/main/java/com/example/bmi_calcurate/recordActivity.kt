@@ -84,6 +84,7 @@ fun record_main_list(navController: NavController , bmi : Double , formatted : S
                 bmi_list
             ){ index, item ->
                 list_custom_item(item)
+                Toast.makeText(context, "$index", Toast.LENGTH_SHORT).show()
             }
         }
         record_btn(bmi = bmi, time = formatted, navController = navController)
