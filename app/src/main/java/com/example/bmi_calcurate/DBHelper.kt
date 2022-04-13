@@ -28,4 +28,7 @@ class DBHelper(context : Context) : SQLiteOpenHelper(context , "bmidb" , null , 
         db?.execSQL("drop table bmidb_member")
         onCreate(db)
     }
+
+
+
 }

@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
             val bmi = viewModel.bmi.value
             // 해당 시간 받기
             var currrent : LocalDateTime = LocalDateTime.now()
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH시mm분 a")
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd.HH:mm.a")
             val formatted = currrent.format(formatter)
 
             NavHost(

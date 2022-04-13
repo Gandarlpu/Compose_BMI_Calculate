@@ -4,6 +4,9 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.preference.PreferenceActivity
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -19,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
@@ -45,12 +49,13 @@ fun recordScreen(navController: NavController , bmi : Double , formatted : Strin
 
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun record_main_list(navController: NavController , bmi : Double , formatted : String){
 
     val context = LocalContext.current
-    val db = DBHelper(context).readableDatabase
-    var bmi_list = remember { mutableListOf<record_list_item_data>() }
+    val db = DBHelper(context).writableDatabase
+    var bmi_list = ArrayList<record_list_item_data>()
 
     // query의 매개변수
     val cursor = db.query("bmidb_member" , arrayOf("bmi" , "time"),
@@ -66,12 +71,9 @@ fun record_main_list(navController: NavController , bmi : Double , formatted : S
             )
             bmi_list.add(record_data)
         }
-        db.close()
+        //db.close()
     }
-    println("bmi_list : ${bmi_list}")
-
-    // lazyColumn의 index로 list.removeAt(index) 삭제
-    // 그럴려면 애니메이션이든 수정클릭이든 휴지통 아이콘이 나와야 될 듯
+    println("$bmi_list")
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -81,16 +83,95 @@ fun record_main_list(navController: NavController , bmi : Double , formatted : S
         record_Topbar(navController)
         LazyColumn{
             itemsIndexed(
-                bmi_list
+                items = bmi_list,
+                key = {index , item ->
+                    item.hashCode() // item 하나마다 객체주소값을 부여?
+                }
             ){ index, item ->
-                list_custom_item(item)
-                Toast.makeText(context, "$index", Toast.LENGTH_SHORT).show()
+                val backgroundColor = Color(240, 240, 240)
+                val dismissState = rememberDismissState(confirmStateChange = { dismissValue ->
+                    when (dismissValue) {
+                        DismissValue.Default -> { // dismissThresholds 만족 안한 상태
+                            false
+                        }
+                        DismissValue.DismissedToEnd -> { // -> 방향 스와이프
+                            false
+                        }
+                        DismissValue.DismissedToStart -> { // <- 방향 스와이프 (삭제)
+                            true
+                        }
+                    }
+                })
+
+                SwipeToDismiss(
+                    state = dismissState,
+                    dismissThresholds = { FractionalThreshold(0.25f) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    dismissContent = { // content
+                        list_custom_item(item)
+                    },
+                    background = { // dismiss content
+                        val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+                        val color by animateColorAsState(
+                            when (dismissState.targetValue) {
+                                DismissValue.Default -> backgroundColor.copy(alpha = 0.5f) // dismissThresholds 만족 안한 상태
+                                DismissValue.DismissedToEnd -> Color.Green.copy(alpha = 0.4f) // -> 방향 스와이프 (수정)
+                                DismissValue.DismissedToStart -> Color.Red.copy(alpha = 0.5f) // <- 방향 스와이프 (삭제)
+                            }
+                        )
+                        val icon = when (dismissState.targetValue) {
+                            DismissValue.Default -> painterResource(R.drawable.ic_baseline_add_circle_24)
+                            DismissValue.DismissedToEnd -> painterResource(R.drawable.ic_baseline_add_circle_24)
+                            DismissValue.DismissedToStart -> painterResource(R.drawable.ic_baseline_delete_forever_24)
+                        }
+                        val scale by animateFloatAsState(
+                            when (dismissState.targetValue == DismissValue.Default) {
+                                true -> 0.8f
+                                else -> 1.5f
+                            }
+                        )
+                        val alignment = when (direction) {
+                            DismissDirection.EndToStart -> Alignment.CenterEnd
+                            DismissDirection.StartToEnd -> Alignment.CenterStart
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color)
+                                .padding(horizontal = 30.dp),
+                            contentAlignment = alignment
+                        ) {
+                            Icon(
+                                modifier = Modifier
+                                    .scale(scale)
+                                    .clickable {
+                                        val values = bmi_list.get(index)
+                                        println("bmi : ${values.bmi}")
+                                        println("time : ${values.time}")
+                                        //val sql =
+                                        //    "DELETE FROM bmidb WHERE bmi=${values.bmi} AND time=${values.time};"
+                                        //db.execSQL(sql)
+                                        db.delete("bmidb_member","bmi=${values.bmi}",null)
+                                        db.close()
+                                        bmi_list.removeAt(index)
+                                        println("삭제 후 : $bmi_list")
+                                        navController.navigate("result")
+                                        Toast.makeText(context , "삭제 되었습니다." , Toast.LENGTH_SHORT).show()
+                                    },
+                                painter = icon,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(5.dp))
             }
         }
         record_btn(bmi = bmi, time = formatted, navController = navController)
     }
 }
-
 
 @Composable
 fun record_btn(bmi : Double , time : String ,  navController: NavController){
@@ -135,7 +216,6 @@ fun record_Topbar(
 ){
 
     val context = LocalContext.current
-    val db = DBHelper(context).writableDatabase
 
     Row(
         //수직
@@ -156,15 +236,7 @@ fun record_Topbar(
         )
         Text(text = "등록된 BMI", fontSize = 20.sp , color = White)
         Spacer(modifier = Modifier.width(150.dp))
-        Button(modifier = Modifier
-                            .layoutId("record_btn"),
-            onClick = {
 
-            },
-
-        ){
-            Text(text = "수정" , color = White , fontSize = 18.sp)
-        }
     }
 }
 
@@ -173,7 +245,6 @@ fun list_custom_item(bmi : record_list_item_data) {
 
     val bmi_data = bmi.bmi
     val bmi_state_res = bmi_state_res(bmi_data)
-    var remove_state = false
 
     Card(
         elevation = 5.dp,
@@ -211,17 +282,13 @@ fun list_custom_item(bmi : record_list_item_data) {
                         painter = painterResource(id = bmi_state_res.imageRes()),
                         contentDescription = null,
                         modifier = Modifier
-                            .size(50.dp)
-                            .clickable {
-                                remove_state = true
-
-                            },
+                            .size(50.dp),
                         colorFilter = ColorFilter.tint(
                             color = Color.White
                         ),
                     )
                     Text(bmi_state_res.bmi_cal(), fontWeight = FontWeight.Bold
-                        , color = Color.White , fontSize = 20.sp)
+                        , color = Color.White , fontSize = 16.sp)
 
                 }
             }
