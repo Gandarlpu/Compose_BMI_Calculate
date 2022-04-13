@@ -2,6 +2,7 @@ package com.example.bmi_calcurate
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
+import android.content.Entity
 import android.preference.PreferenceActivity
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -84,10 +85,14 @@ fun record_main_list(navController: NavController , bmi : Double , formatted : S
         LazyColumn{
             itemsIndexed(
                 items = bmi_list,
-                key = {index , item ->
-                    item.hashCode() // item 하나마다 객체주소값을 부여?
-                }
+                key = { index, item ->
+                    // item 하나마다 객체주소값 부여
+                    item.hashCode()
+                },
             ){ index, item ->
+                println("lazyColumn Id : ${item.hashCode()}")
+                // 연속으로 item의 hash코드가 같으면 즉, bmi가 같으면 key값 중복으로 리스트에 안뜸.
+
                 val backgroundColor = Color(240, 240, 240)
                 val dismissState = rememberDismissState(confirmStateChange = { dismissValue ->
                     when (dismissValue) {
@@ -197,7 +202,7 @@ fun record_btn(bmi : Double , time : String ,  navController: NavController){
                 isClicked = false
 
                 Toast.makeText(context , "저장 완료" , Toast.LENGTH_SHORT).show()
-                navController.navigate("result")
+                navController.navigate("home")
             }else{
                 Toast.makeText(context , "앱 종료 후 다시 클릭해주세요" , Toast.LENGTH_SHORT).show()
             }
