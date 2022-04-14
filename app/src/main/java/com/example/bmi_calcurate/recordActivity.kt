@@ -83,13 +83,7 @@ fun record_main_list(navController: NavController , bmi : Double , formatted : S
     ) {
         record_Topbar(navController)
         LazyColumn{
-            itemsIndexed(
-                items = bmi_list,
-                key = { index, item ->
-                    // item 하나마다 객체주소값 부여
-                    item.hashCode()
-                },
-            ){ index, item ->
+            itemsIndexed(items = bmi_list){ index, item ->
                 println("lazyColumn Id : ${item.hashCode()}")
                 // 연속으로 item의 hash코드가 같으면 즉, bmi가 같으면 key값 중복으로 리스트에 안뜸.
 
