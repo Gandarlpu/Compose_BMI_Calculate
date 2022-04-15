@@ -3,9 +3,9 @@
     package="com.example.bmi_calcurate">
 
     <application
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/main_logo"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/main_logo_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BMI_calcurate">
         <activity
